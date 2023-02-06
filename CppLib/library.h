@@ -3,6 +3,7 @@
 
 
 #include <iostream>
+#include "limits"
 #include <math.h>
 #include <time.h>
 #include "string"
@@ -25,7 +26,7 @@ class PMC
 
         PMC(int* npl, int L);
         PMC(string filename);
-        void SavePMC(char* filename);
+        void SavePMC(string filename);
         void Train(int nb_rep, float step, float* X, float* Y, int xRow, int xCol, int yCol, bool isClassification);
         float* Predict(float* X, bool isClassification);
 

@@ -47,7 +47,7 @@ rule CUSTOM_COMMAND
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = "F:\Logiciel\JetBrains Toolbox\apps\CLion\ch-0\223.8617.54\bin\cmake\win\x64\bin\cmake.exe" --regenerate-during-build -S"G:\Cours\2022-2023\Machine Learning\CppLib" -B"G:\Cours\2022-2023\Machine Learning\CppLib\cmake-build-debug"
+  command = "F:\Logiciel\JetBrains Toolbox\apps\CLion\ch-0\223.8617.54\bin\cmake\win\x64\bin\cmake.exe" --regenerate-during-build -S"G:\Cours\2022-2023\Machine Learning\MachineLearningProjet_M2\CppLib" -B"G:\Cours\2022-2023\Machine Learning\MachineLearningProjet_M2\CppLib\cmake-build-debug"
   description = Re-running CMake...
   generator = 1
 

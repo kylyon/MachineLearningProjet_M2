@@ -29,6 +29,140 @@ float* multiplyMatrix(float* matA, float* matB, int rowA, int colA, int colB)
     return multM;
 }
 
+DLLEXPORT void saveML(char* filen,float* W, int size, int yCol)
+{
+    string filename = string(filen);
+
+    ofstream fichier(filename, ios::out | ios::trunc);
+
+    fichier << size << endl;
+    fichier << yCol << endl;
+
+    for (int j = 0; j < size * yCol; j++) {
+        fichier << W[j] << " ";
+    }
+    fichier << endl;
+
+    cout << "Linear Model Saved" << endl;
+}
+
+DLLEXPORT void saveRBF(char* filen,float* W, float* uks, int size, int yCol, int xUKS, int yUKS)
+{
+    string filename = string(filen);
+
+    ofstream fichier(filename, ios::out | ios::trunc);
+
+    fichier << size << endl;
+    fichier << yCol << endl;
+    fichier << xUKS << endl;
+    fichier << yUKS << endl;
+
+    for (int j = 0; j < xUKS * yUKS; j++) {
+        fichier << uks[j] << " ";
+    }
+    fichier << endl;
+
+    for (int j = 0; j < size * yCol; j++) {
+        fichier << W[j] << " ";
+    }
+    fichier << endl;
+
+    cout << "Linear Model Saved" << endl;
+}
+
+DLLEXPORT int* loadInfoML(char* filen)
+{
+    string filename = string(filen);
+
+    ifstream file(filename, ios::in);
+
+    int size, yCol;
+
+    file >> size >> yCol;
+
+    int* res = new int[2]{size, yCol};
+
+    return res;
+}
+
+DLLEXPORT int* loadInfoRBF(char* filen)
+{
+    string filename = string(filen);
+
+    ifstream file(filename, ios::in);
+
+    int size, yCol, xUKS, yUKS;
+
+    file >> size >> yCol >> xUKS >> yUKS;
+
+    int* res = new int[4]{size, yCol, xUKS, yUKS};
+
+    return res;
+}
+
+DLLEXPORT float* loadML(char* filen)
+{
+    string filename = string(filen);
+
+    ifstream file(filename, ios::in);
+
+    int size;
+
+    file >> size;
+
+    int yCol;
+
+    file >> yCol;
+
+    float* W = new float[size * yCol];
+
+    for (int i = 0; i < yCol; i++) {
+        for (int j = 0; j < size; j++) {
+            file >> W[i * size + j];
+        }
+    }
+
+    return W;
+}
+
+DLLEXPORT float* loadRBF(char* filen)
+{
+    string filename = string(filen);
+
+    ifstream file(filename, ios::in);
+
+    int size;
+
+    file >> size;
+
+    int yCol;
+
+    file >> yCol;
+
+    int xUKS;
+
+    file >> xUKS;
+
+    int yUKS;
+
+    file >> yUKS;
+
+    float* W = new float[size * yCol + xUKS * yUKS];
+
+    for (int i = 0; i < yUKS; i++) {
+        for (int j = 0; j < xUKS; j++) {
+            file >> W[i * xUKS + j];
+        }
+    }
+
+    for (int i = 0; i < yCol; i++) {
+        for (int j = 0; j < size; j++) {
+            file >> W[(xUKS * yUKS) + i * size + j];
+        }
+    }
+
+    return W;
+}
 
 DLLEXPORT float* LinearModelTrain(int nb_rep, float step, float* X, float* Y, int xRow, int xCol, int yCol, int yIndex, bool is_classification)
 {
@@ -115,7 +249,6 @@ DLLEXPORT float* LinearModelTrain(int nb_rep, float step, float* X, float* Y, in
             W[j] += step * (yk - gXk) * xk[j];
         }
     }
-
     //cout << "Linear Model Training done" << endl;
     return W;
 
@@ -205,13 +338,15 @@ PMC::PMC(string filename)
     /*Initialisation des X et des deltas*/
     for (int l = 0; l < L; l++) {
         X.push_back(new float[(d[l] + 1)]);
-        deltas.push_back(new float[(d[l] + 1)]);
         for (int j = 0; j < (d[l] + 1); j++) {
             float Xf;
             file >> Xf;
             X[l][j] = Xf;
         }
+    }
 
+    for (int l = 0; l < L; l++) {
+        deltas.push_back(new float[(d[l] + 1)]);
         for (int j = 0; j < (d[l] + 1); j++) {
             float deltasf;
             file >> deltasf;
@@ -224,11 +359,8 @@ PMC::PMC(string filename)
     cout << "PMC created" << endl;
 }
 
-void PMC::SavePMC(char* filename)
+void PMC::SavePMC(string filename)
 {
-    cout << filename;
-
-    return;
     ofstream fichier(filename, ios::out | ios::trunc);
 
     fichier << this->L << endl;
@@ -237,12 +369,13 @@ void PMC::SavePMC(char* filename)
     }
     fichier << endl;
 
+
     for (int l = 0; l < this->L; l++) {
         if (l > 0)
         {
             for (int i = 0; i < (this->d[l-1] + 1); i++) {
                 for (int j = 0; j < (this->d[l] + 1); j++) {
-                    fichier << this->d[i] << this->W[l][j + (i * (this->d[l-1] + 1))];
+                    fichier << this->W[l][j + (i * (this->d[l-1] + 1))]<< " ";
                 }
             }
         }
@@ -254,14 +387,19 @@ void PMC::SavePMC(char* filename)
         for (int j = 0; j < (this->d[l] + 1); j++) {
             fichier << this->X[l][j] << " ";
         }
-        fichier << endl;
+    }
+
+    fichier << endl;
+
+    for (int l = 0; l < this->L; l++) {
         for (int j = 0; j < (this->d[l] + 1); j++) {
             fichier << this->deltas[l][j] << " ";
         }
-        fichier << endl;
     }
 
     fichier.close();
+
+    cout << "PMC Saved" << endl;
 }
 
 void PMC::Train(int nb_rep, float step, float* X, float* Y, int xRow, int xCol, int yCol, bool is_classification)
@@ -378,10 +516,16 @@ DLLEXPORT float* predictPMC(PMC* pmc, float* X, bool isClassification)
     return pmc->Predict(X, isClassification);
 }
 
-DLLEXPORT void savePMC(PMC* pmc, char* filename)
+DLLEXPORT void savePMC(PMC* pmc)
 {
-    cout << "test";
-    pmc->SavePMC(filename);
+    //cout << "test" << endl;
+    pmc->SavePMC("test.txt");
+}
+
+DLLEXPORT PMC* createPMCFromFile(char* file)
+{
+    //cout << "test" << endl;
+    return new PMC(string(file));
 }
 
 void PMC::free() {
@@ -396,3 +540,138 @@ DLLEXPORT void freeMemory(PMC* pmc)
     //pmc->free();
     ::free(pmc);
 }
+
+bool isPartitionStable(vector<vector<float>> uk, vector<vector<float>> ukOld)
+{
+    if (uk.size() != ukOld.size())
+    {
+        return false;
+    }
+    for (int i = 0; i < uk.size(); i++) {
+        for (int j = 0; j < uk[i].size() ;j++) {
+            if (uk[i][j] != ukOld[i][j])
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+DLLEXPORT float* kMeansAlgo(float* X, int k, int xRow, int xCol)
+{
+    srand( (unsigned)time(NULL) );
+    vector<vector<vector<float>>> Ck = vector<vector<vector<float>>>();
+
+    vector<int> indexK = vector<int>();
+    for (int i = 0; i < xRow; i++) {
+        indexK.push_back( ((float(rand()) / float(RAND_MAX)) * (k - 0)));
+    }
+
+    //Init Cks
+    for (int i = 0; i < k; i++) {
+        Ck.push_back(vector<vector<float>>());
+    }
+
+    //Populate Cks
+    for (int i = 0; i < xRow; i++) {
+        Ck[indexK[i]].push_back(vector<float>());
+        for (int j = 0; j < xCol; j++) {
+            Ck[indexK[i]].back().push_back(X[i * xCol + j]);
+        }
+    }
+
+    int index = 0;
+    vector<vector<float>> uk = vector<vector<float>>();
+    vector<vector<float>> ukOld = vector<vector<float>>();
+    vector<vector<vector<float>>> Ckp1;
+    bool hasChanged = false;
+    while (true) {
+        uk.clear();
+
+        //Init centre µk
+        for (int i = 0; i < k; i++) {
+            uk.push_back(vector<float>());
+            for (int j = 0; j < xCol; j++) {
+                uk[i].push_back(0.0f);
+            }
+        }
+
+        for (int i = 0; i < k; i++) {
+            for (int j = 0; j < Ck[i].size() ;j++) {
+                for (int l = 0; l < xCol; l++) {
+                    uk[i][l] += Ck[i][j][l] / Ck[i].size();
+                }
+            }
+        }
+
+        Ckp1 = vector<vector<vector<float>>>();
+
+        //Init Ckp1s
+        for (int i = 0; i < k; i++) {
+            Ckp1.push_back(vector<vector<float>>());
+        }
+
+        //Populate Ckp1s
+        for (int i = 0; i < Ck.size(); i++) {
+            for (int m = 0; m < Ck[i].size(); m++) {
+                float minDistance = numeric_limits<float>::max();
+                int minIndex = 0;
+                for (int l = 0; l < k; l++) {
+                    float temp = 0;
+                    for (int j = 0; j < xCol; j++) {
+                        temp += pow(Ck[i][m][j] - uk[l][j], 2);
+                    }
+                    temp = ::abs(::sqrt(temp));
+                    if (temp < minDistance)
+                    {
+                        minDistance = temp;
+                        minIndex = l;
+                    }
+                }
+
+                if(i != minIndex && !hasChanged)
+                {
+                    hasChanged = true;
+                }
+                Ckp1[minIndex].push_back(vector<float>());
+                for (int j = 0; j < xCol; j++) {
+                    Ckp1[minIndex].back().push_back(Ck[i][m][j]);
+                }
+
+            }
+        }
+
+       /* for (int i = 0; i < k; i++) {
+            cout << "[";
+            for (int j = 0; j < xCol; j++) {
+                cout << " " << uk[i][j];
+            }
+            cout << " ]" << endl;
+        }
+
+        cout << endl;*/
+
+        if (!hasChanged)
+        {
+            break;
+        }
+
+        hasChanged = false;
+        Ck = Ckp1;
+        ukOld = uk;
+        index++;
+
+    }
+
+    float* res = new float[k * xCol];
+    for (int i = 0; i < k; i++) {
+        for (int j = 0; j < xCol; j++) {
+            res[i * xCol + j] = uk[i][j];
+        }
+    }
+
+    // Tableau k * xCol
+    return res;
+}
+

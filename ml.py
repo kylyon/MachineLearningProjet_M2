@@ -46,20 +46,51 @@ if __name__ == "__main__":
     checkPMC.argtypes = [ctypes.c_void_p]
 
     savePMC = c_lib.savePMC
-    savePMC.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+    savePMC.argtypes = [ctypes.c_void_p]
+
+    createPMCFromFile = c_lib.createPMCFromFile
+    createPMCFromFile.argtypes = [ctypes.c_void_p]
+    createPMCFromFile.restype = ctypes.c_void_p
+
+    saveML = c_lib.saveML
+    saveML.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.c_int]
+
+    saveRBF = c_lib.saveRBF
+    saveRBF.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int]
+
+    loadML = c_lib.loadML
+    loadML.argtypes = [ctypes.c_void_p]
+    loadML.restype = ctypes.POINTER(ctypes.c_float)
+
+    loadRBF = c_lib.loadRBF
+    loadRBF.argtypes = [ctypes.c_void_p]
+    loadRBF.restype = ctypes.POINTER(ctypes.c_float)
+
+    loadInfoML = c_lib.loadInfoML
+    loadInfoML.argtypes = [ctypes.c_void_p]
+    loadInfoML.restype = ctypes.POINTER(ctypes.c_int)
+
+    loadInfoRBF = c_lib.loadInfoRBF
+    loadInfoRBF.argtypes = [ctypes.c_void_p]
+    loadInfoRBF.restype = ctypes.POINTER(ctypes.c_int)
+
+    kMean = c_lib.kMeansAlgo
+    kMean.argtypes = [ctypes.POINTER(ctypes.c_float), ctypes.c_int, ctypes.c_int, ctypes.c_int]
+    kMean.restype = ctypes.POINTER(ctypes.c_float)
 
     W = list()
     Ws = list()
 
 
-    def TrainModeleLineaire(nb_rep, alpha, is_classification):
+    def TrainModeleLineaire(nb_rep, alpha, is_classification, filename=b"linear_model_save.txt"):
         W = list()
         if (len(Y[0]) < 2):
             res = linear_model(nb_rep, alpha, points_c, classes_c, len(X), len(X[0]), len([[c] for c in Y][0]), 0,
                                is_classification)
 
             W = res[:len(X[0]) + 1]
-            print("W = ", W)
+            # print("W = ", W)
+            Wc = (c_float * len(W))(*W)
         else:
             for i in range(len(Y[0])):
                 res = linear_model(nb_rep, alpha, points_c, classes_c, len(X), len(X[0]), len(Y[0]), i,
@@ -69,9 +100,12 @@ if __name__ == "__main__":
                 # print("Wr = ", W)
                 W.append(Wr)
 
+            Wc = [W[i][j] for i in range(len(W)) for j in range(len(W[i]))]
+            Wc = (c_float * len(Wc))(*Wc)
+
+        SaveModeleLineaire(filename, Wc, len(X[0]) + 1, len(Y[0]))
         print("Linear Model Training Done")
         return W
-
 
     def PredictModeleLineaire(input, W, is_classification):
         # Model Lineaire C++
@@ -79,7 +113,6 @@ if __name__ == "__main__":
         if (len(Y[0]) > 2):
             maxMat = [np.matmul(np.transpose(Wt), np.array([1.0, *input])) for Wt in W]
             index = maxMat.index(max(maxMat))
-
 
             print(list(reversed(sorted([(maxMat[i], results[i]) for i in range(len(maxMat))], key=lambda x: x[0],))))
             c = results[index]
@@ -89,8 +122,24 @@ if __name__ == "__main__":
             c = 'lightcyan' if np.matmul(np.transpose(W), np.array([1.0, *input])) >= 0 else 'pink'
         return c
 
+    def SaveModeleLineaire(filename, W, col, row):
+        t = ctypes.create_string_buffer(filename)
+        saveML(t, W, col, row)
 
-    def showGraphLinear(W, is_classification):
+    def LoadModeleLineaire(filename):
+        t = ctypes.create_string_buffer(filename)
+        size = loadInfoML(t)[0]
+        yCol = loadInfoML(t)[1]
+        res = loadML(t)
+        if len(Y[0]) > 2:
+            W = []
+            for i in range(yCol):
+                W.append(res[i * size:i * size + size])
+        else:
+            W = res[:size]
+        return W
+
+    def showGraphLinear(W, is_classification, borne):
         if is_classification:
             test_points = []
             test_colors = []
@@ -111,10 +160,8 @@ if __name__ == "__main__":
             plt.plot(X, fitline, c="r")
         plt.show()
 
-
     def predict(slope, x, intercept):
         return slope * x + intercept
-
 
     def CreatePMC(list_npl):
         npl = list_npl
@@ -125,14 +172,18 @@ if __name__ == "__main__":
 
         return pmc_r
 
+    def CreatePMCFromFile(file):
+        t = ctypes.create_string_buffer(file)
+        return createPMCFromFile(t)
 
     def TrainPMC(pmc, nb_rep, alpha, is_classification):
         trainPMC(pmc, nb_rep, alpha, points_c, classes_c, len(X), len(X[0]), len(Y[0]), is_classification)
 
         return pmc
 
-    def SavePMC(pmc, filename):
-        savePMC(pmc, filename.encode('utf-8'))
+    def SavePMC(pmc, file):
+        t = ctypes.create_string_buffer(file)
+        savePMC(pmc, t)
 
     def PredictPMC(pmc, input, is_classification):
         input_c = (c_float * len(input))(*input)
@@ -152,7 +203,7 @@ if __name__ == "__main__":
     def FreePMC(pmc):
         freeMemory(pmc)
 
-    def showGraphPMC(pmc, is_classification):
+    def showGraphPMC(pmc, is_classification, borne):
         if is_classification:
             test_points = []
             test_colors = []
@@ -176,7 +227,96 @@ if __name__ == "__main__":
             plt.plot(X, fitline, c="r")
         plt.show()
 
+    def GetKMeans(k):
+        uks = []
+        kMeanMat = kMean(points_c, k, len(X), len(X[0]))
+        for k in range(k):
+            uks.append(kMeanMat[k * len(X[0]): k * len(X[0]) + len(X[0])])
 
+        return uks
+
+    def TrainRBF(gamma, uks):
+
+
+        sigma = []
+
+        for i in range(len(X)):
+            sigma.append([])
+            for k in range(len(results)):
+                uk = uks[k]
+                # print(uk)
+                xk = np.array([a - b for a, b in zip(X[i], uk)])
+                # xk = np.array([a-b for a, b in zip(X[i], X[k])])
+                norm = sum([elem ** 2 for elem in xk])
+                gauss = math.exp(-gamma * norm)
+
+                sigma[i].append(gauss)
+
+        sigma = np.array(sigma)
+
+        sigmaT = np.transpose(sigma)
+
+        # print(sigma)
+
+        W = np.matmul(np.matmul(np.linalg.inv(np.matmul(sigmaT, sigma)), sigmaT), Y)
+        # W = np.matmul(np.linalg.inv(sigma), Y)
+
+        # print(W)
+
+        Wc = [W[i][j] for i in range(len(W)) for j in range(len(W[i]))]
+        Wc = (c_float * len(Wc))(*Wc)
+        SaveRBF(b"rbf_save.txt", Wc, uks, len(W[0]), len(W))
+        return W
+
+    def SaveRBF(filename, W, uks, col, row):
+        t = ctypes.create_string_buffer(filename)
+
+        uks_c = [uks[i][j] for i in range(len(uks)) for j in range(len(uks[i]))]
+        uks_c = (c_float * len(uks_c))(*uks_c)
+
+        saveRBF(t, W, uks_c, col, row, len(uks[0]), len(uks))
+
+    def LoadRBF(filename):
+        t = ctypes.create_string_buffer(filename)
+        size = loadInfoRBF(t)[0]
+        yCol = loadInfoRBF(t)[1]
+        xUKS = loadInfoRBF(t)[2]
+        yUKS = loadInfoRBF(t)[3]
+        res = loadRBF(t)
+        uks = []
+
+        for i in range(yUKS):
+            uks.append(res[i * xUKS: i * xUKS + xUKS])
+
+        W = []
+        for i in range(yCol):
+            W.append(res[(xUKS * yUKS) + i * size: (xUKS * yUKS) + i * size + size])
+        return W, uks
+
+    def PredictRBF(input, W, is_classification, gamma, uks):
+        # Model Lineaire C++
+        print("Prediction RBF")
+        if (len(Y[0]) > 2):
+            maxMat = []
+            for k in range(len(results)):
+                out = 0
+                for n in range(len(W)):
+                    uk = uks[n]
+                    xk = np.array([a - b for a, b in zip(input, uk)])
+                    norm = sum([elem ** 2 for elem in xk])
+                    gauss = math.exp(-gamma * norm)
+                    out += W[n][k] * gauss
+                maxMat.append(out)
+
+            index = maxMat.index(max(maxMat))
+
+            print(list(reversed(sorted([(maxMat[i], results[i]) for i in range(len(maxMat))], key=lambda x: x[0],))))
+            c = results[index]
+            # print(maxMat[results.index("France")])
+            # print(maxMat[index])
+        else:
+            c = 'lightcyan' if np.matmul(np.transpose(W), np.array([*input])) >= 0 else 'pink'
+        return c
 
     def convertHistogram(image):
         return [elem / (image.size[0] * image.size[1]) * 100 for elem in image.histogram()]
@@ -277,8 +417,6 @@ if __name__ == "__main__":
 
     italie_test = Image.open('dataset/flag/afs.jpg')
     italie_test = italie_test.convert("RGBA")
-
-
 
     results = [
         "Andorre",
@@ -541,31 +679,50 @@ if __name__ == "__main__":
     points_c = (c_float * len(points))(*points)
     classes_c = (c_float * len(classes))(*classes)
 
-    # W = TrainModeleLineaire(100000, 0.001, True)
-    # print("Modele Lineaire")
-    # print(rgbAverage(italie_test))
-    # print(rgbAverage(italie_train))
-    # print(rgbAverage(france_test))
-    # print(PredictModeleLineaire(averageRGB100(italie_train), W, True))
-    # print(PredictModeleLineaire(averageRGB100(italie_test), W, True))
-    # print(PredictModeleLineaire(averageRGB100(france_test), W, True))
+    # print("RBF")
+    #
+    # gamma = 0.0000001
+    #
+    # uks = GetKMeans(len(results))
+    #
+    # # W = TrainRBF(gamma, uks)
+    # filename = b"rbf_save.txt"
+    # W, uks = LoadRBF(filename)
+    #
+    #
+    # print(PredictRBF(averageRGB100(france_test), W, True, gamma, uks))
+    # print(PredictRBF(averageRGB100(italie_train), W, True, gamma, uks))
+    # print(PredictRBF(averageRGB100(italie_test), W, True, gamma, uks))
 
-    pmc_flag = CreatePMC([len(X[0]), 20, 10, len(Y[0])])
+    # W_flag = TrainModeleLineaire(100000, 0.001, True)
+    print("Modele Lineaire")
+    filename = b"linear_model_save.txt"
+    W_flag = LoadModeleLineaire(filename)
+    print(PredictModeleLineaire(averageRGB100(italie_train), W_flag, True))
+    print(PredictModeleLineaire(averageRGB100(italie_test), W_flag, True))
+    print(PredictModeleLineaire(averageRGB100(france_test), W_flag, True))
+
+    # print("PMC")
+    # pmc_flag = CreatePMC([len(X[0]), 20, 10, len(Y[0])])
+    #
+    # checkPMC(pmc_flag)
+    # pmc_flag = TrainPMC(pmc_flag, 10000, 0.001, True)
+    #
+    # filename = b"test.txt"
+    # SavePMC(pmc_flag, filename)
+    # freeMemory(pmc_flag)
+    # exit()
 
     #checkPMC(pmc_flag)
-    pmc_flag = TrainPMC(pmc_flag, 10000, 0.001, True)
-
-    filename = "test.txt"
-    SavePMC(pmc_flag, filename)
-    exit()
-
-    #checkPMC(pmc_flag)
-    print('PMC')
-    print(PredictPMC(pmc_flag, averageRGB100(france_test), True))
-    print(PredictPMC(pmc_flag, averageRGB100(italie_test), True))
-    print(PredictPMC(pmc_flag, averageRGB100(italie_train), True))
-
-    freeMemory(pmc_flag)
+    # print('PMC')
+    # filename = b"test.txt"
+    # pmc_flag = CreatePMCFromFile(filename)
+    #
+    # print(PredictPMC(pmc_flag, averageRGB100(france_test), True))
+    # print(PredictPMC(pmc_flag, averageRGB100(italie_test), True))
+    # print(PredictPMC(pmc_flag, averageRGB100(italie_train), True))
+    #
+    # freeMemory(pmc_flag)
 
     # X = np.array([[1, 0], [0, 1], [0, 0], [1, 1]])
     # Y = np.array([[1], [1], [-1], [-1]])
@@ -690,7 +847,7 @@ if __name__ == "__main__":
     # #PredictPMC([2, 1], 10000, 0.01)
     #
     # # XOR
-    print("XOR")
+    # print("XOR")
 
     # Création Dataset
     # X = np.array([[1, 0], [0, 1], [0, 0], [1, 1]])
