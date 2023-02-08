@@ -18,7 +18,7 @@ using namespace std;
 class PMC
 {
     public:
-        vector<float*> W;
+        vector<vector<vector<float>>> W;
         vector<float*> X;
         vector<float*> deltas;
         vector<int> d;

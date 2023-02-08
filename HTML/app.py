@@ -23,18 +23,18 @@ def upload_file():
         upload = Image.open('./uploads/' + f.filename)
         upload = upload.convert("RGBA")
 
-        # filename = b"../linear_model_save.txt"
-        # W_flag = ml.LoadModeleLineaire(filename)
-        # predictml = ml.PredictModeleLineaire(ml.averageRGB100(upload), W_flag, True)
-        #
-        # gamma = 0.0000001
-        # filename = b"../rbf_save.txt"
-        # W, uks = ml.LoadRBF(filename)
-        # predictrbf = ml.PredictRBF(ml.averageRGB100(upload), W, True, gamma, uks)
+        filename = b"../linear_model_save.txt"
+        W_flag = ml.LoadModeleLineaire(filename)
+        predictml = ml.PredictModeleLineaire(ml.averageRGB100(upload), W_flag, True)
+
+        gamma = 0.0000001
+        filename = b"../rbf_save.txt"
+        W, uks = ml.LoadRBF(filename)
+        predictrbf = ml.PredictRBF(ml.averageRGB100(upload), W, True, gamma, uks)
 
         filename = b"../test.txt"
         pmc_flag = ml.CreatePMCFromFile(filename)
-        predictml = ml.PredictPMC(pmc_flag, ml.averageRGB100(upload), True)
+        predictpmc = ml.PredictPMC(pmc_flag, ml.averageRGB100(upload), True)
         ml.FreePMC(pmc_flag)
 
-    return render_template('index.html', predictml=predictml)
+    return render_template('index.html', predictml=predictml, predictrbf=predictrbf, predictpmc=predictpmc)

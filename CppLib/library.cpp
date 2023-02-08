@@ -256,9 +256,11 @@ DLLEXPORT float* LinearModelTrain(int nb_rep, float step, float* X, float* Y, in
 
 PMC::PMC(int* npl, int L)
 {
+    cout << "PMC Creation..." << endl;
+
     srand( (unsigned)time(NULL) );
 
-    this->W = vector<float*>();
+    this->W = vector<vector<vector<float>>>();
     this->d = vector<int>();
     for (int i = 0; i < L; i++) {
         this->d.push_back(npl[i]);
@@ -271,18 +273,15 @@ PMC::PMC(int* npl, int L)
 
     /*Initialisation des W*/
     for (int l = 0; l < L; l++) {
+        W.emplace_back();
         if (l > 0)
         {
-            W.push_back(new float[(this->d[l-1] + 1) * (this->d[l] + 1)]);
             for (int i = 0; i < (d[l-1] + 1); i++) {
+                W[l].emplace_back();
                 for (int j = 0; j < (d[l] + 1); j++) {
-                    W[l][j + (i * (d[l-1] + 1))] = j == 0 ? 0.0 : ((float(rand()) / float(RAND_MAX)) * (1 - -1)) + -1;
+                    W[l][i].push_back(j == 0 ? 0.0 : ((float(rand()) / float(RAND_MAX)) * (1 - -1)) + -1);
                 }
             }
-        }
-        else
-        {
-            W.push_back(new float[1]);
         }
     }
 
@@ -312,26 +311,23 @@ PMC::PMC(string filename)
         this->d.push_back(dL);
     }
 
-    this->W = vector<float*>();
+    this->W = vector<vector<vector<float>>>();
     this->X = vector<float*>();
     this->deltas = vector<float*>();
 
     /*Initialisation des W*/
     for (int l = 0; l < L; l++) {
+        W.emplace_back();
         if (l > 0)
         {
-            W.push_back(new float[(this->d[l-1] + 1) * (this->d[l] + 1)]);
             for (int i = 0; i < (d[l-1] + 1); i++) {
+                W[l].emplace_back();
                 for (int j = 0; j < (d[l] + 1); j++) {
                     float Wf;
                     file >> Wf;
-                    W[l][j + (i * (d[l-1] + 1))] = Wf;
+                    W[l][i].push_back(Wf);
                 }
             }
-        }
-        else
-        {
-            W.push_back(new float[1]);
         }
     }
 
@@ -375,7 +371,7 @@ void PMC::SavePMC(string filename)
         {
             for (int i = 0; i < (this->d[l-1] + 1); i++) {
                 for (int j = 0; j < (this->d[l] + 1); j++) {
-                    fichier << this->W[l][j + (i * (this->d[l-1] + 1))]<< " ";
+                    fichier << this->W[l][i][j]<< " ";
                 }
             }
         }
@@ -404,7 +400,7 @@ void PMC::SavePMC(string filename)
 
 void PMC::Train(int nb_rep, float step, float* X, float* Y, int xRow, int xCol, int yCol, bool is_classification)
 {
-
+    cout << "PMC Training..." << endl;
     srand( (unsigned)time(NULL) );
 
     int xColSize = xCol+1;
@@ -440,7 +436,7 @@ void PMC::Train(int nb_rep, float step, float* X, float* Y, int xRow, int xCol, 
             for (int i = 1; i < this->d[l-1] + 1; i++) {
                 float total = 0.0;
                 for (int j = 1; j < this->d[l] + 1; j++) {
-                    total += this->W[l][j + i * (this->d[l-1] + 1)] * this->deltas[l][j];
+                    total += this->W[l][i][j] * this->deltas[l][j];
                     this->deltas[l - 1][i] = (1 - ::powf(this->X[l - 1][i], 2)) * total;
                 }
             }
@@ -449,7 +445,7 @@ void PMC::Train(int nb_rep, float step, float* X, float* Y, int xRow, int xCol, 
         for (int l = 1; l < this->L; l++) {
             for (int i = 0; i < this->d[l-1] + 1; i++) {
                 for (int j = 1; j < this->d[l] + 1; j++) {
-                    this->W[l][j + i * (this->d[l-1] + 1)] += -step * this->X[l-1][i] * this->deltas[l][j];
+                    this->W[l][i][j] += -step * this->X[l-1][i] * this->deltas[l][j];
                 }
             }
         }
@@ -461,11 +457,11 @@ float* PMC::Predict(float* X, bool isClassification)
 {
     this->Propagate(X, isClassification);
 
-    float* res = new float[this->d[this->L -1]];
+    /*float* res = new float[this->d[this->L -1]];
     for (int i = 0; i < this->d[this->L -1]; i++) {
         res[i] = this->X[this->L - 1][i+1];
-    }
-    return res;
+    }*/
+    return this->X[this->L - 1];
 }
 
 void PMC::Propagate(float* X, bool isClassification) {
@@ -479,7 +475,7 @@ void PMC::Propagate(float* X, bool isClassification) {
         for (int j = 1; j < this->d[l] + 1; j++) {
             float total = 0;
             for (int i = 0; i < this->d[l - 1] + 1; i++) {
-                total += this->W[l][j + i * (this->d[l-1] + 1)] * this->X[l - 1][i];
+                total += this->W[l][i][j] * this->X[l - 1][i];
             }
 
             this->X[l][j] = total;
@@ -516,10 +512,10 @@ DLLEXPORT float* predictPMC(PMC* pmc, float* X, bool isClassification)
     return pmc->Predict(X, isClassification);
 }
 
-DLLEXPORT void savePMC(PMC* pmc)
+DLLEXPORT void savePMC(PMC* pmc, char* file)
 {
     //cout << "test" << endl;
-    pmc->SavePMC("test.txt");
+    pmc->SavePMC(string(file));
 }
 
 DLLEXPORT PMC* createPMCFromFile(char* file)

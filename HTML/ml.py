@@ -45,7 +45,7 @@ checkPMC = c_lib.checkPMC
 checkPMC.argtypes = [ctypes.c_void_p]
 
 savePMC = c_lib.savePMC
-savePMC.argtypes = [ctypes.c_void_p]
+savePMC.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 
 createPMCFromFile = c_lib.createPMCFromFile
 createPMCFromFile.argtypes = [ctypes.c_void_p]
@@ -160,11 +160,11 @@ def SavePMC(pmc, file):
     savePMC(pmc, t)
 
 def PredictPMC(pmc, input, is_classification):
-    print(pmc)
+    # print(pmc)
     input_c = (c_float * len(input))(*input)
-    t = predictPMC(pmc, input_c, is_classification)
+    t = predictPMC(pmc, input_c, is_classification)[1:len(results) + 1]
 
-    print(t)
+    # print(t)
 
     if len(results) > 2:
         maxMat = [t[i] for i in range(len(results))]
@@ -212,7 +212,7 @@ def GetKMeans(k):
 
     return uks
 
-def TrainRBF(gamma, uks):
+def TrainRBF(gamma, uks, filename=b"rbf_save.txt"):
 
 
     sigma = []
@@ -242,7 +242,7 @@ def TrainRBF(gamma, uks):
 
     Wc = [W[i][j] for i in range(len(W)) for j in range(len(W[i]))]
     Wc = (c_float * len(Wc))(*Wc)
-    SaveRBF(b"rbf_save.txt", Wc, uks, len(W[0]), len(W))
+    SaveRBF(filename, Wc, uks, len(W[0]), len(W))
     return W
 
 def SaveRBF(filename, W, uks, col, row):
@@ -393,7 +393,7 @@ if __name__ == "__main__":
     france_test = Image.open('../dataset/flag/training/fr.png')
     france_test = france_test.convert("RGBA")
 
-    italie_train = Image.open('../dataset/flag/training/it.png')
+    italie_train = Image.open('../dataset/flag/italie.jpg')
     italie_train = italie_train.convert("RGBA")
 
     italie_test = Image.open('../dataset/flag/afs.jpg')
@@ -662,9 +662,9 @@ if __name__ == "__main__":
     #
     # gamma = 0.0000001
     #
-    # # uks = GetKMeans(len(results))
+    # uks = GetKMeans(len(results))
     #
-    # # W = TrainRBF(gamma, uks)
+    # W = TrainRBF(gamma, uks, b"../rbf_save.txt")
     # filename = b"../rbf_save.txt"
     # W, uks = LoadRBF(filename)
     #
@@ -674,7 +674,7 @@ if __name__ == "__main__":
     # print(PredictRBF(averageRGB100(italie_train), W, True, gamma, uks))
     # print(PredictRBF(averageRGB100(italie_test), W, True, gamma, uks))
 
-    # W_flag = TrainModeleLineaire(100000, 0.001, True)
+    # W_flag = TrainModeleLineaire(100000, 0.001, True, b"../linear_model_save.txt")
     # print("Modele Lineaire")
     # filename = b"linear_model_save.txt"
     # W_flag = LoadModeleLineaire(filename)
@@ -685,15 +685,15 @@ if __name__ == "__main__":
     # print("PMC")
     # pmc_flag = CreatePMC([len(X[0]), 20, 10, len(Y[0])])
     #
-    # checkPMC(pmc_flag)
-    # pmc_flag = TrainPMC(pmc_flag, 10000, 0.001, True)
-    #
-    # filename = b"test.txt"
+    # # checkPMC(pmc_flag)
+    # pmc_flag = TrainPMC(pmc_flag, 100000, 0.001, True)
+    # #
+    # filename = b"../test.txt"
     # SavePMC(pmc_flag, filename)
     # freeMemory(pmc_flag)
-    # exit()
-
-    #checkPMC(pmc_flag)
+    # # exit()
+    #
+    # #checkPMC(pmc_flag)
     print('PMC')
     filename = b"../test.txt"
     pmc_flag = CreatePMCFromFile(filename)
@@ -701,8 +701,8 @@ if __name__ == "__main__":
     print(PredictPMC(pmc_flag, averageRGB100(france_test), True))
     print(PredictPMC(pmc_flag, averageRGB100(italie_test), True))
     print(PredictPMC(pmc_flag, averageRGB100(italie_train), True))
-    #
-    # freeMemory(pmc_flag)
+
+    FreePMC(pmc_flag)
 
     # X = np.array([[1, 0], [0, 1], [0, 0], [1, 1]])
     # Y = np.array([[1], [1], [-1], [-1]])
