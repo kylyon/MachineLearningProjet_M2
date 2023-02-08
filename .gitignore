@@ -128,4 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-CppLib/cmake-build-debug/
+CppLib/cmake-build-debug/*
