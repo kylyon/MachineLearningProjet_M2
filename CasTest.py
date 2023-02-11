@@ -83,9 +83,11 @@ kMean.restype = ctypes.POINTER(ctypes.c_float)
 # ML
 def TrainModeleLineaire(nb_rep, alpha, is_classification, filename=b"linear_model_save.txt"):
     if not is_classification:
-        print(np.matmul(np.transpose(X), X))
-        W = np.matmul(np.matmul(np.linalg.inv(np.matmul(np.transpose(X), X)), np.transpose(X)), Y)
-        W = [1.0, *W[0]]
+        res = linear_model(nb_rep, alpha, points_c, classes_c, len(X), len(X[0]), len([[c] for c in Y][0]), 0,
+                           is_classification)
+
+        W = res[:len(X[0]) + 1]
+        W = [1.0, *W]
 
         Wc = (c_float * len(W))(*W)
         SaveModeleLineaire(filename, Wc, len(X[0]) + 1, len(Y[0]))
@@ -1049,21 +1051,91 @@ if __name__ == "__main__":
     # plt.title("RBF - Linear Simple 3D")
     # showGraphRBF(W, False, borne, gamma, uks, len(Y[0]), colors, True)
 
-    print("Linear Tricky 3D")
+    # Linear Tricky 3D
+    # print("Linear Tricky 3D")
+    #
+    # # Création Dataset
+    # X = np.array([
+    #     [1, 1],
+    #     [2, 2],
+    #     [3, 3]
+    # ])
+    # Y = np.array([
+    #     [1],
+    #     [2],
+    #     [3]
+    # ])
+    #
+    # borne = (0, 300)
+    #
+    # colors = ["blue"]
+    #
+    # points = [X[i, j] for i in range(len(X)) for j in range(len(X[i]))]
+    # classes = [i for i in Y] if len(Y[0]) < 2 else [Y[i][j] for i in range(len(Y)) for j in range(len(Y[i]))]
+    #
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # plt.title("Linear Tricky 3D")
+    # ax.scatter(X[:, 0], X[:, 1], Y[:, 0])
+    # plt.show()
+    # plt.clf()
+    #
+    # points_c = (c_float * len(points))(*points)
+    # classes_c = (c_float * len(classes))(*classes)
+    #
+    # # Modele Lineaire
+    # W = TrainModeleLineaire(1000, 0.01, False, b"CasTestSave/LinearTricky3D_ML.txt")
+    #
+    # W = LoadModeleLineaire(b"CasTestSave/LinearTricky3D_ML.txt")
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # plt.title("Modèle Linéaire - Linear Tricky 3D")
+    # showGraphModeleLineaire(W, False, borne, colors, True)
+    #
+    # # PMC
+    # pmc = CreatePMC([2, 1])
+    # TrainPMC(pmc, 10000, 0.01, False)
+    # SavePMC(pmc, b"CasTestSave/LinearTricky3D_PMC.txt")
+    # pmc = CreatePMCFromFile(b"CasTestSave/LinearTricky3D_PMC.txt")
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # plt.title("PMC - Linear Tricky 3D")
+    # showGraphPMC(pmc, False, borne, len(Y[0]), colors, True)
+    # FreePMC(pmc)
+    #
+    # # # RBF
+    # print("RBF")
+    #
+    # gamma = 0.01
+    #
+    # uks = X
+    #
+    # W = TrainRBF(gamma, uks, len(uks), b"CasTestSave/LinearTricky3D_RBF.txt")
+    # filename = b"CasTestSave/LinearTricky3D_RBF.txt"
+    # W, uks = LoadRBF(filename)
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # plt.title("RBF - Linear Tricky 3D")
+    # showGraphRBF(W, False, borne, gamma, uks, len(Y[0]), colors, True)
+
+    # Non Linear Simple 3D
+    print("Non Linear Simple 3DD")
 
     # Création Dataset
     X = np.array([
+        [1, 0],
+        [0, 1],
         [1, 1],
-        [2, 2],
-        [3, 3]
+        [0, 0],
     ])
     Y = np.array([
-        [1],
         [2],
-        [3]
+        [1],
+        [-2],
+        [-1]
     ])
 
-    borne = (0, 300)
+    borne = (0, 100)
 
     colors = ["blue"]
 
@@ -1072,7 +1144,7 @@ if __name__ == "__main__":
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    plt.title("Linear Tricky 3D")
+    plt.title("Non Linear Simple 3D")
     ax.scatter(X[:, 0], X[:, 1], Y[:, 0])
     plt.show()
     plt.clf()
@@ -1081,36 +1153,36 @@ if __name__ == "__main__":
     classes_c = (c_float * len(classes))(*classes)
 
     # Modele Lineaire
-    W = TrainModeleLineaire(1000, 0.01, False, b"CasTestSave/LinearTricky3D_ML.txt")
-
-    W = LoadModeleLineaire(b"CasTestSave/LinearTricky3D_ML.txt")
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    plt.title("Modèle Linéaire - Linear Tricky 3D")
-    showGraphModeleLineaire(W, False, borne, colors, True)
+    # W = TrainModeleLineaire(1000, 0.01, False, b"CasTestSave/NonLinearSimple3D_ML.txt")
+    #
+    # W = LoadModeleLineaire(b"CasTestSave/NonLinearSimple3D_ML.txt")
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # plt.title("Modèle Linéaire - Non Linear Simple 3D")
+    # showGraphModeleLineaire(W, False, borne, colors, True)
 
     # PMC
-    pmc = CreatePMC([2, 1])
-    TrainPMC(pmc, 10000, 0.01, False)
-    SavePMC(pmc, b"CasTestSave/LinearTricky3D_PMC.txt")
-    pmc = CreatePMCFromFile(b"CasTestSave/LinearTricky3D_PMC.txt")
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    plt.title("PMC - Linear Tricky 3D")
-    showGraphPMC(pmc, False, borne, len(Y[0]), colors, True)
-    FreePMC(pmc)
+    # pmc = CreatePMC([2, 2, 1])
+    # TrainPMC(pmc, 100000, 0.001, False)
+    # SavePMC(pmc, b"CasTestSave/NonLinearSimple3D_PMC.txt")
+    # pmc = CreatePMCFromFile(b"CasTestSave/NonLinearSimple3D_PMC.txt")
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # plt.title("PMC - Non Linear Simple 3D")
+    # showGraphPMC(pmc, False, borne, len(Y[0]), colors, True)
+    # FreePMC(pmc)
 
     # # RBF
-    print("RBF")
-
-    gamma = 0.01
-
-    uks = X
-
-    W = TrainRBF(gamma, uks, len(uks), b"CasTestSave/LinearTricky3D_RBF.txt")
-    filename = b"CasTestSave/LinearTricky3D_RBF.txt"
-    W, uks = LoadRBF(filename)
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    plt.title("RBF - Linear Tricky 3D")
-    showGraphRBF(W, False, borne, gamma, uks, len(Y[0]), colors, True)
+    # print("RBF")
+    #
+    # gamma = 0.001
+    #
+    # uks = X
+    #
+    # W = TrainRBF(gamma, uks, len(uks), b"CasTestSave/NonLinearSimple3D_RBF.txt")
+    # filename = b"CasTestSave/NonLinearSimple3D_RBF.txt"
+    # W, uks = LoadRBF(filename)
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # plt.title("RBF - Non Linear Simple 3D")
+    # showGraphRBF(W, False, borne, gamma, uks, len(Y[0]), colors, True)
