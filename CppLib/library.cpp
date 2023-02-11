@@ -357,6 +357,7 @@ PMC::PMC(string filename)
 
 void PMC::SavePMC(string filename)
 {
+
     ofstream fichier(filename, ios::out | ios::trunc);
 
     fichier << this->L << endl;
@@ -514,7 +515,6 @@ DLLEXPORT float* predictPMC(PMC* pmc, float* X, bool isClassification)
 
 DLLEXPORT void savePMC(PMC* pmc, char* file)
 {
-    //cout << "test" << endl;
     pmc->SavePMC(string(file));
 }
 

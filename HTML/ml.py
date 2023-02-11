@@ -273,6 +273,7 @@ def LoadRBF(filename):
 def PredictRBF(input, W, is_classification, gamma, uks):
     # Model Lineaire C++
     print("Prediction RBF")
+    print(W)
     if len(results) > 2:
         maxMat = []
         for k in range(len(results)):
@@ -668,7 +669,7 @@ if __name__ == "__main__":
     # filename = b"../rbf_save.txt"
     # W, uks = LoadRBF(filename)
     #
-    # print(W)
+    # # print(W)
     #
     # print(PredictRBF(averageRGB100(france_test), W, True, gamma, uks))
     # print(PredictRBF(averageRGB100(italie_train), W, True, gamma, uks))
@@ -676,33 +677,31 @@ if __name__ == "__main__":
 
     # W_flag = TrainModeleLineaire(100000, 0.001, True, b"../linear_model_save.txt")
     # print("Modele Lineaire")
-    # filename = b"linear_model_save.txt"
+    # filename = b"../linear_model_save.txt"
     # W_flag = LoadModeleLineaire(filename)
+    # print(W)
     # print(PredictModeleLineaire(averageRGB100(italie_train), W_flag, True))
     # print(PredictModeleLineaire(averageRGB100(italie_test), W_flag, True))
     # print(PredictModeleLineaire(averageRGB100(france_test), W_flag, True))
 
     # print("PMC")
-    # pmc_flag = CreatePMC([len(X[0]), 20, 10, len(Y[0])])
-    #
-    # # checkPMC(pmc_flag)
-    # pmc_flag = TrainPMC(pmc_flag, 100000, 0.001, True)
-    # #
+    # pmc_flag = CreatePMC([len(X[0]), 30, 30, len(Y[0])])
+    # pmc_flag = TrainPMC(pmc_flag, 1000000, 0.001, True)
     # filename = b"../test.txt"
     # SavePMC(pmc_flag, filename)
     # freeMemory(pmc_flag)
     # # exit()
     #
     # #checkPMC(pmc_flag)
-    print('PMC')
-    filename = b"../test.txt"
-    pmc_flag = CreatePMCFromFile(filename)
-
-    print(PredictPMC(pmc_flag, averageRGB100(france_test), True))
-    print(PredictPMC(pmc_flag, averageRGB100(italie_test), True))
-    print(PredictPMC(pmc_flag, averageRGB100(italie_train), True))
-
-    FreePMC(pmc_flag)
+    # print('PMC')
+    # filename = b"../test.txt"
+    # pmc_flag = CreatePMCFromFile(filename)
+    # #
+    # print(PredictPMC(pmc_flag, averageRGB100(france_test), True))
+    # print(PredictPMC(pmc_flag, averageRGB100(italie_test), True))
+    # print(PredictPMC(pmc_flag, averageRGB100(italie_train), True))
+    #
+    # FreePMC(pmc_flag)
 
     # X = np.array([[1, 0], [0, 1], [0, 0], [1, 1]])
     # Y = np.array([[1], [1], [-1], [-1]])
