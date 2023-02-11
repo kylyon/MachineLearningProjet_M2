@@ -1,93 +1,240 @@
 <!doctype html>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<title>Hello from Flask</title>
-{% if name %}
-  <h1>Hello {{ name }}!</h1>
-{% else %}
-  <h1>Hello, World!</h1>
-{% endif %}
+<html>
+  <head>
+    <title>Projet Machine Learning</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="app.js"></script>
+  </head>
+  <body>
+    <div id="div-content">
+      <div id="title-content">
+        <h1>Projet Machine Learning</h1>
+      </div>
+      <div id="result-content">
+        <div id="result-button-box">
+          <form action="/upload" method="post" enctype="multipart/form-data">
+            <input id="file" type="file" name="file">
+            <input class="button" type="submit">
+          </form>
+        </div>
+        <div id="result-box">
+          <div id="result-title">
+            <h1>Résultats</h1>
+          </div>
+          <div class="result-box-text">
+            <h2>Modèle linéaire: </h2>
+            {% if predictml %}
+            <p>{{ predictml }}!</p>
+            {% endif %}
+          </div>
+          <div class="result-box-text">
+            <h2>PMC: </h2>
+            {% if predictpmc %}
+            <p>{{ predictpmc }}!</p>
+            {% endif %}
+          </div>
+          <div class="result-box-text">
+            <h2>RBF: </h2>
+            {% if predictrbf %}
+            <p>{{ predictrbf }}!</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div id="paint-content">
+        <div class="container">
+          <section class="tools-board">
+            <div class="row">
+              <label class="title">Formes</label>
+              <ul class="options">
+                <li class="option tool" id="rectangle">
+                  <img src="{{ url_for('static', filename='icons/rectangle.svg') }}" alt="">
+                  <span>Rectangle</span>
+                </li>
+                <li class="option tool" id="circle">
+                  <img src="{{ url_for('static', filename='icons/circle.svg') }}" alt="">
+                  <span>Cercle</span>
+                </li>
+                <li class="option tool" id="triangle">
+                  <img src="{{ url_for('static', filename='icons/triangle.svg') }}" alt="">
+                  <span>Triangle</span>
+                </li>
+                <li class="option">
+                  <input type="checkbox" id="fill-color">
+                  <label for="fill-color">Remplissage</label>
+                </li>
+              </ul>
+            </div>
+            <div class="row">
+              <label class="title">Options</label>
+              <ul class="options">
+                <li class="option active tool" id="brush">
+                  <img src="{{ url_for('static', filename='icons/brush.svg') }}" alt="">
+                  <span>Pinceau</span>
+                </li>
+                <li class="option tool" id="eraser">
+                  <img src="{{ url_for('static', filename='icons/eraser.svg') }}" alt="">
+                  <span>Gomme</span>
+                </li>
+                <li class="option">
+                  <input type="range" id="size-slider" min="1" max="30" value="5">
+                </li>
+              </ul>
+            </div>
+            <div class="row colors">
+              <label class="title">Couleurs</label>
+              <ul class="options">
+                <li class="option"></li>
+                <li class="option selected"></li>
+                <li class="option"></li>
+                <li class="option"></li>
+                <li class="option"></li>
+                <li class="option"></li>
+                <li class="option"></li>
+                <li class="option"></li>
+                <li class="option"></li>
+                <li class="option">
+                  <input type="color" id="color-picker" value="#4A98F7">
+                </li>
+              </ul>
+            </div>
+            <div class="row buttons">
+              <button class="clear-canvas">Reset</button>
+              <button class="save-img">Sauvegarder l'image</button>
+            </div>
+          </section>
+          <section class="drawing-board">
+            <canvas></canvas>
+          </section>
+        </div>
+      </div>
+      <script>
+        const canvas = document.querySelector("canvas"),
+        toolBtns = document.querySelectorAll(".tool"),
+        fillColor = document.querySelector("#fill-color"),
+        sizeSlider = document.querySelector("#size-slider"),
+        colorBtns = document.querySelectorAll(".colors .option"),
+        colorPicker = document.querySelector("#color-picker"),
+        clearCanvas = document.querySelector(".clear-canvas"),
+        saveImg = document.querySelector(".save-img"),
+        ctx = canvas.getContext("2d");
 
-<form action="/upload" method="post" enctype="multipart/form-data">
-  <input id="file" type="file" name="file">
-  <input type="submit">
-</form>
+        let prevMouseX, prevMouseY, snapshot,
+        isDrawing = false,
+        selectedTool = "brush",
+        brushWidth = 5,
+        selectedColor = "#000";
 
-{% if predictml %}
-  <p>Modele Linéaire : {{ predictml }}!</p>
-{% endif %}
-{% if predictpmc %}
-  <p>PMC : {{ predictpmc }}!</p>
-{% endif %}
-{% if predictrbf %}
-  <p>RBF : {{ predictrbf }}!</p>
-{% endif %}
+        const setCanvasBackground = () => {
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = selectedColor;
+        }
 
-<input id="hex" placeholder="enter hex color">
-<canvas id="draw" style="outline: solid 1px black"></canvas>
+        window.addEventListener("load", () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            setCanvasBackground();
+        });
 
-<script src="app.js"></script>
+        const drawRect = (e) => {
+            if(!fillColor.checked) {
+                return ctx.strokeRect(e.offsetX, e.offsetY, prevMouseX - e.offsetX, prevMouseY - e.offsetY);
+            }
+            ctx.fillRect(e.offsetX, e.offsetY, prevMouseX - e.offsetX, prevMouseY - e.offsetY);
+        }
 
-<script>
-var canvas = document.getElementById("draw");
+        const drawCircle = (e) => {
+            ctx.beginPath();
+            let radius = Math.sqrt(Math.pow((prevMouseX - e.offsetX), 2) + Math.pow((prevMouseY - e.offsetY), 2));
+            ctx.arc(prevMouseX, prevMouseY, radius, 0, 2 * Math.PI);
+            fillColor.checked ? ctx.fill() : ctx.stroke();
+        }
 
-var ctx = canvas.getContext("2d");
+        const drawTriangle = (e) => {
+            ctx.beginPath();
+            ctx.moveTo(prevMouseX, prevMouseY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.lineTo(prevMouseX * 2 - e.offsetX, e.offsetY);
+            ctx.closePath();
+            fillColor.checked ? ctx.fill() : ctx.stroke();
+        }
 
-var onCanvas = false;
-var rect = canvas.getBoundingClientRect();
-resize();
+        const startDraw = (e) => {
+            isDrawing = true;
+            prevMouseX = e.offsetX;
+            prevMouseY = e.offsetY;
+            ctx.beginPath();
+            ctx.lineWidth = brushWidth;
+            ctx.strokeStyle = selectedColor;
+            ctx.fillStyle = selectedColor;
+            snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        }
 
-document.getElementById('draw').onclick = function(e) {
-  // e = Mouse click event.
-  //onCanvas = true;
-}
+        const drawing = (e) => {
+            if(!isDrawing) return;
+            ctx.putImageData(snapshot, 0, 0);
+            if(selectedTool === "brush" || selectedTool === "eraser") {
+                if(selectedTool === "brush") {
+                    canvas.style.cursor = "url('../static/icons/brush_cursor.svg'), auto";
+                } else {
+                    canvas.style.cursor = "url('../static/icons/eraser_cursor.svg'), auto";
+                }
+                ctx.strokeStyle = selectedTool === "eraser" ? "#fff" : selectedColor;
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.stroke();
+            } else if(selectedTool === "rectangle") {
+                canvas.style.cursor = "crosshair";
+                drawRect(e);
+            } else if(selectedTool === "circle"){
+                canvas.style.cursor = "crosshair";
+                drawCircle(e);
+            } else {
+                canvas.style.cursor = "crosshair";
+                drawTriangle(e);
+            }
+        }
 
-// resize canvas when window is resized
-function resize() {
-  ctx.canvas.width = 800;
-  ctx.canvas.height = 400;
-}
+        toolBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelector(".options .active").classList.remove("active");
+                btn.classList.add("active");
+                selectedTool = btn.id;
+            });
+        });
 
-// initialize position as 0,0
-var pos = { x: 0, y: 0 };
+        sizeSlider.addEventListener("change", () => brushWidth = sizeSlider.value);
 
-// new position from mouse events
-function setPosition(e) {
-  pos.x = e.clientX - rect.left;;
-  pos.y = e.clientY - rect.top;;
-}
+        colorBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelector(".options .selected").classList.remove("selected");
+                btn.classList.add("selected");
+                selectedColor = window.getComputedStyle(btn).getPropertyValue("background-color");
+            });
+        });
 
-function draw(e) {
-  if (e.buttons !== 1) return; // if mouse is not clicked, do not go further
+        colorPicker.addEventListener("change", () => {
+            colorPicker.parentElement.style.background = colorPicker.value;
+            colorPicker.parentElement.click();
+        });
 
-  if (!onCanvas) return;
+        clearCanvas.addEventListener("click", () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            setCanvasBackground();
+        });
 
-  var color = document.getElementById("hex").value;
+        saveImg.addEventListener("click", () => {
+            const link = document.createElement("a");
+            link.download = `${Date.now()}.jpg`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
 
-  ctx.beginPath(); // begin the drawing path
-
-  ctx.lineWidth = 20; // width of line
-  ctx.lineCap = "round"; // rounded end cap
-  ctx.strokeStyle = color; // hex color of line
-
-  ctx.moveTo(pos.x, pos.y); // from position
-  setPosition(e);
-  ctx.lineTo(pos.x, pos.y); // to position
-
-  ctx.stroke(); // draw it!
-}
-
-
-// add window event listener to trigger when window is resized
-window.addEventListener("resize", resize);
-
-// add event listeners to trigger on different mouse events
-document.addEventListener("mousemove", draw);
-document.addEventListener("mousedown", setPosition);
-document.addEventListener("mouseenter", setPosition);
-canvas.addEventListener("mouseenter", function () {
-  onCanvas = true;
-});
-canvas.addEventListener("mouseleave", function () {
-  onCanvas = false;
-});
-</script>
+        canvas.addEventListener("mousedown", startDraw);
+        canvas.addEventListener("mousemove", drawing);
+        canvas.addEventListener("mouseup", () => isDrawing = false);
+      </script>
+    </div>
+  </body>
+</html>

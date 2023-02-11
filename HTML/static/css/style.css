@@ -1,0 +1,269 @@
+body {
+    background-color: #95BDAF;
+    font-family: Candara;
+    width: 80%;
+    margin-left: 10%;
+}
+
+#div-content {
+    background-color: #E6E8E7;
+    margin-top: 90px;
+    margin-left: -10px;
+    box-shadow: 0px 15px 0px 0px #4A7971;
+    height: 650px;
+}
+
+#title-content {
+    width: 100%;
+    text-align: center;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#result-content {
+    width: 40%;
+    float: left;
+    height: 559px;
+}
+
+#result-button-box {
+    width: 450px;
+    margin-left: 50px;
+    text-align: center;
+    padding-bottom: 15px;
+}
+
+#result-box {
+    background-color: #C7D7CF;
+    width: 450px;
+    margin-left: 50px;
+    height: 449px;
+    border-radius: 20px;
+    border: 2px solid #95BDAF;
+}
+
+#result-title {
+margin-left: 30px;
+}
+
+.result-box-text {
+    width: 80%;
+    margin-left: 10%;
+    border-top: solid 1px #CB8387;
+    display: block;
+    height: 70px;
+}
+
+.result-box-text h2 {
+    width: 175px;
+    float: left;
+}
+
+.result-box-text p {
+  float: right;
+  width: 173px;
+  margin-top: 26px;
+}
+
+#paint-content {
+    width: 60%;
+    float: right;
+    height: 559px;
+}
+
+.container{
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  height: 522px;
+}
+
+section {
+  background: #C7D7Cf;
+  border-radius: 7px;
+  border: solid 2px #95BDAF;
+}
+
+.tools-board{
+  width: 210px;
+  padding: 10px 15px 0;
+}
+
+.tools-board .row{
+  margin-bottom: 10px;
+}
+
+.row .options {
+  list-style: none;
+}
+
+.row .options .option {
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.option img {
+    width: 25px;
+    height: 25px;
+}
+
+.option:is(:hover, .active) img {
+  filter: invert(17%) sepia(90%) saturate(3000%) hue-rotate(0deg) brightness(100%) contrast(100%);
+}
+
+.option :where(span, label){
+  color: #5A6168;
+  cursor: pointer;
+  padding-left: 10px;
+}
+
+.option:is(:hover, .active) :where(span, label){
+  color: #CB8387;
+}
+
+.option #fill-color{
+  cursor: pointer;
+  height: 14px;
+  width: 14px;
+}
+
+#fill-color:checked ~ label{
+  color: #CB8387;
+}
+
+.option #size-slider{
+  width: 100%;
+  height: 5px;
+  margin-top: 10px;
+}
+
+.colors .options {
+  display: flex;
+  padding: 0px;
+  justify-content: space-between;
+}
+
+.colors .option {
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  margin-top: 3px;
+  position: relative;
+  border: 1px solid black;
+}
+
+.colors .options .option {
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.colors .option:nth-child(1){
+  background-color: #fff;
+}
+
+.colors .option:nth-child(2){
+  background-color: #000;
+}
+
+.colors .option:nth-child(3){
+  background-color: #FF0000;
+}
+
+.colors .option:nth-child(4){
+  background-color: #FF7F00;
+}
+
+.colors .option:nth-child(5){
+  background-color: #FFFF00;
+}
+
+.colors .option:nth-child(6){
+  background-color: #00FF00;
+}
+
+.colors .option:nth-child(7){
+  background-color: #0000FF;
+}
+
+.colors .option:nth-child(8){
+  background-color: #2E2B5F;
+}
+
+.colors .option:nth-child(9){
+  background-color: #8B00FF;
+}
+
+.colors .option:nth-child(10){
+  background-color: #fff;
+}
+
+.colors .option.selected::before {
+  position: absolute;
+  content: "";
+  top: 50%;
+  left: 50%;
+  height: 14px;
+  width: 14px;
+  background: inherit;
+  border-radius: inherit;
+  border: 3px solid #4A7971;
+  transform: translate(-50%, -50%);
+}
+
+.colors .option:first-child.selected::before {
+  border-color: #4A7971;
+}
+
+.colors .option:last-child {
+    border-radius: 0%;
+}
+
+.option #color-picker{
+  opacity: 0;
+  cursor: pointer;
+}
+
+.buttons button, .button {
+  width: 100%;
+  color: #fff;
+  border: none;
+  outline: none;
+  padding: 11px 0;
+  font-size: 0.9rem;
+  margin-bottom: 13px;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.buttons .clear-canvas {
+  color: #CB8387;
+  border: 1px solid #CB8387;
+  transition: all 0.3s ease;
+}
+
+.clear-canvas:hover {
+  color: #fff;
+  background: #CB8387;
+}
+
+.buttons .save-img, .button {
+  background: #4A7971;
+  border: 1px solid #4A7971;
+}
+
+.button {
+    width: 150px;
+}
+
+.drawing-board{
+  overflow: hidden;
+  width: 650px;
+}
+
+.drawing-board canvas{
+  width: 100%;
+  height: 100%;
+}
